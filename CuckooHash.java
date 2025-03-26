@@ -1,6 +1,6 @@
 /******************************************************************
  *
- *   YOUR NAME / SECTION NUMBER
+ *   Rachel Riemersma / 001
  *
  *   Note, additional comments provided throughout this source code
  *   is for educational purposes
@@ -245,13 +245,40 @@ public class CuckooHash<K, V> {
 	 */
 
  	public void put(K key, V value) {
+        // Check for potential duplicate key-value pair
+        if (get(key) != null && get(key).equals(value)) {
+            return;
+        }
 
-		// ADD YOUR CODE HERE - DO NOT FORGET TO ADD YOUR NAME AT TOP OF FILE.
-		// Also make sure you read this method's prologue above, it should help
-		// you. Especially the two HINTS in the prologue.
+        // Initial bucket location based on hash1
+        int currentPos = hash1(key);
+        Bucket<K, V> newBucket = new Bucket<>(key, value);
 
-		return;
-	}
+        // Maximum number of iterations before considering it a cycle
+        for (int i = 0; i < CAPACITY; i++) {
+            // If the current position is empty, insert directly
+            if (table[currentPos] == null) {
+                table[currentPos] = newBucket;
+                return;
+            }
+
+            // If the position is not empty, swap the new bucket with the existing one
+            Bucket<K, V> existingBucket = table[currentPos];
+            table[currentPos] = newBucket;
+            newBucket = existingBucket;
+
+            // Switch between the two hash functions for the next iteration
+            currentPos = (currentPos == hash1(newBucket.getBucKey()))
+                    ? hash2(newBucket.getBucKey())
+                    : hash1(newBucket.getBucKey());
+        }
+
+        // If we've reached capacity iterations, we need to rehash
+        rehash();
+
+        // Recursively insert the last element that couldn't be placed
+        put(newBucket.getBucKey(), newBucket.getValue());
+    }
 
 
 	/**
